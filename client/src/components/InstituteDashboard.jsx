@@ -19,10 +19,10 @@ const InstituteDashboard = () => {
       // Load profile
       const profileData = await contract.getProfile(account);
       setProfile({
-        name: profileData[0],
-        profilePicture: profileData[1],
-        exists: profileData[2],
-        isInstitute: profileData[3],
+        name: profileData.name,
+        profilePicture: profileData.profilePicture,
+        exists: profileData.exists,
+        isInstitute: profileData.isInstitute,
       });
 
       // Load linked students
@@ -32,8 +32,8 @@ const InstituteDashboard = () => {
           const studentProfile = await contract.getProfile(studentAddress);
           return {
             address: studentAddress,
-            name: studentProfile[0],
-            profilePicture: studentProfile[1],
+            name: studentProfile.name,
+            profilePicture: studentProfile.profilePicture,
           };
         })
       );
@@ -54,11 +54,11 @@ const InstituteDashboard = () => {
         const certs = await contract.getStudentCertificates(student);
         certsMap[student] = certs.map((cert, index) => ({
           index,
-          ipfsHash: cert[0],
-          documentName: cert[1],
-          uploader: cert[2],
-          isVerified: cert[3],
-          uploadTimestamp: Number(cert[4]),
+          ipfsHash: cert.ipfsHash,
+          documentName: cert.documentName,
+          uploader: cert.uploader,
+          isVerified: cert.isVerified,
+          uploadTimestamp: Number(cert.uploadTimestamp),
         }));
       }
       setStudentCertificates(certsMap);
@@ -185,4 +185,3 @@ const InstituteDashboard = () => {
 };
 
 export default InstituteDashboard;
-

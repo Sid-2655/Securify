@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import contractABI from '../utils/contractAbi.json';
 
 // Contract address on localhost
-const CONTRACT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+const CONTRACT_ADDRESS = '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9';
 
 const Web3Context = createContext(null);
 
@@ -57,13 +57,13 @@ export const Web3Provider = ({ children }) => {
       
       // Get network and switch to localhost if needed
       const network = await browserProvider.getNetwork();
-      const localhostChainId = BigInt(31337);
+      const localhostChainId = BigInt(1337);
       
       if (network.chainId !== localhostChainId) {
         try {
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x7A69' }], // 31337 in hex
+            params: [{ chainId: '0x539' }], // 1337 in hex
           });
         } catch (switchError) {
           // If chain doesn't exist, add it
@@ -71,9 +71,9 @@ export const Web3Provider = ({ children }) => {
             await window.ethereum.request({
               method: 'wallet_addEthereumChain',
               params: [{
-                chainId: '0x7A69',
-                chainName: 'Localhost 8545',
-                rpcUrls: ['http://127.0.0.1:8545'],
+                chainId: '0x539',
+                chainName: 'Localhost 8547',
+                rpcUrls: ['http://127.0.0.1:8547'],
                 nativeCurrency: {
                   name: 'ETH',
                   symbol: 'ETH',
@@ -244,4 +244,3 @@ export const Web3Provider = ({ children }) => {
 };
 
 export default Web3Context;
-

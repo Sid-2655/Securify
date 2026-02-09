@@ -26,6 +26,22 @@ module.exports = {
         count: 20,
       },
     },
+    localhost2: {
+      url: "http://127.0.0.1:8546",
+      chainId: 1337,
+      accounts: {
+        mnemonic: "test test test test test test test test test test test junk",
+        count: 20,
+      },
+    },
+    localhost3: {
+      url: "http://127.0.0.1:8547",
+      chainId: 1337,
+      accounts: {
+        mnemonic: "test test test test test test test test test test test junk",
+        count: 20,
+      },
+    },
   },
   paths: {
     sources: "./contracts",

@@ -1,4 +1,5 @@
 const hre = require("hardhat");
+const fs = require("fs");
 
 async function main() {
   console.log("🚀 Deploying ECertify contract...");
@@ -49,6 +50,11 @@ async function main() {
 
   console.log("\n📋 Deployment Information:");
   console.log(JSON.stringify(deploymentInfo, null, 2));
+  
+  // Save the ABI
+  const abi = ECertify.interface.format('json');
+  fs.writeFileSync("client/src/utils/contractAbi.json", JSON.stringify(abi, null, 2));
+  console.log("\n✅ Contract ABI saved to client/src/utils/contractAbi.json");
 
   // Verify contract on block explorer (if not local network)
   if (hre.network.name !== "hardhat" && hre.network.name !== "localhost") {

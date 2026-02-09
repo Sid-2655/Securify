@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
+import { uploadToIPFS } from '../utils/ipfs';
 
 const StudentDashboard = () => {
   const { contract, account, sendTransaction, callContract } = useWeb3();
@@ -7,9 +8,12 @@ const StudentDashboard = () => {
   const [institute, setInstitute] = useState(null);
   const [certificates, setCertificates] = useState([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [instituteAddress, setInstituteAddress] = useState('');
   const [documentName, setDocumentName] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLinking, setIsLinking] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -22,10 +26,10 @@ const StudentDashboard = () => {
       // Load profile
       const profileData = await contract.getProfile(account);
       setProfile({
-        name: profileData[0],
-        profilePicture: profileData[1],
-        exists: profileData[2],
-        isInstitute: profileData[3],
+        name: profileData.name,
+        profilePicture: profileData.profilePicture,
+        exists: profileData.exists,
+        isInstitute: profileData.isInstitute,
       });
 
       // Load institute
@@ -34,7 +38,7 @@ const StudentDashboard = () => {
         const instituteProfile = await contract.getProfile(instituteAddress);
         setInstitute({
           address: instituteAddress,
-          name: instituteProfile[0],
+          name: instituteProfile.name,
         });
       }
 
@@ -42,11 +46,11 @@ const StudentDashboard = () => {
       const certs = await contract.getStudentCertificates(account);
       setCertificates(certs.map((cert, index) => ({
         index,
-        ipfsHash: cert[0],
-        documentName: cert[1],
-        uploader: cert[2],
-        isVerified: cert[3],
-        uploadTimestamp: Number(cert[4]),
+        ipfsHash: cert.ipfsHash,
+        documentName: cert.documentName,
+        uploader: cert.uploader,
+        isVerified: cert.isVerified,
+        uploadTimestamp: Number(cert.uploadTimestamp),
       })));
     } catch (error) {
       console.error('Error loading data:', error);
@@ -61,14 +65,12 @@ const StudentDashboard = () => {
 
     setIsUploading(true);
     try {
-      // TODO: Replace with actual IPFS upload
-      // For now, using mock hash
-      const mockIpfsHash = 'QM_MOCK_HASH_' + Date.now();
-      
-      // Real IPFS upload would go here:
-      // const ipfsHash = await uploadToIPFS(selectedFile);
-      
-      const tx = await contract.uploadCertificate(account, mockIpfsHash, documentName, {
+      const ipfsHash = await uploadToIPFS(selectedFile);
+      if (!ipfsHash) {
+        throw new Error('IPFS upload failed');
+      }
+
+      const tx = await contract.uploadCertificate(account, ipfsHash, documentName, {
         gasLimit: 500000
       });
       await tx.wait();
@@ -83,6 +85,30 @@ const StudentDashboard = () => {
       alert('Upload failed: ' + (error.reason || error.message));
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleLinkToInstitute = async () => {
+    if (!instituteAddress.trim()) {
+      alert('Please enter an institute address');
+      return;
+    }
+
+    setIsLinking(true);
+    try {
+      const tx = await contract.linkToInstitute(instituteAddress, {
+        gasLimit: 500000
+      });
+      await tx.wait();
+      alert('Successfully linked to institute!');
+      setShowLinkModal(false);
+      setInstituteAddress('');
+      loadData();
+    } catch (error) {
+      console.error('Linking error:', error);
+      alert('Linking failed: ' + (error.reason || error.message));
+    } finally {
+      setIsLinking(false);
     }
   };
 
@@ -113,6 +139,14 @@ const StudentDashboard = () => {
         <button className="w-full px-4 py-2 border-2 border-pink-500 text-pink-500 rounded-lg hover:bg-pink-50 transition-colors">
           VIEW PROFILE
         </button>
+        {!institute && (
+          <button
+            onClick={() => setShowLinkModal(true)}
+            className="w-full mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            LINK TO INSTITUTE
+          </button>
+        )}
       </div>
 
       {/* Main Content */}
@@ -209,9 +243,42 @@ const StudentDashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Link to Institute Modal */}
+      {showLinkModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <h3 className="text-2xl font-bold text-purple-600 mb-4">Link to Institute</h3>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-semibold mb-2">Institute Address</label>
+              <input
+                type="text"
+                value={instituteAddress}
+                onChange={(e) => setInstituteAddress(e.target.value)}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                placeholder="Enter institute's Ethereum address"
+              />
+            </div>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowLinkModal(false)}
+                className="flex-1 px-4 py-2 text-gray-700 border-2 border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                CANCEL
+              </button>
+              <button
+                onClick={handleLinkToInstitute}
+                disabled={isLinking}
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+              >
+                {isLinking ? 'Linking...' : 'LINK'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default StudentDashboard;
-
