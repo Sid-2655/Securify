@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWeb3 } from '../contexts/Web3Context';
 
@@ -10,30 +10,42 @@ const Login = () => {
   const [registerType, setRegisterType] = useState(null); // 'student' or 'institute'
   const [isRegistering, setIsRegistering] = useState(false);
 
+  useEffect(() => {
+    if (isConnected && contract && account) {
+      const checkProfile = async () => {
+        try {
+          const profile = await contract.getProfile(account);
+          if (profile.exists) {
+            if (profile.isInstitute) {
+              navigate('/institute');
+            } else {
+              navigate('/student');
+            }
+          }
+        } catch (error) {
+          console.error('Error checking profile automatically:', error);
+          alert('Error checking profile automatically. Please try again.');
+        }
+      };
+
+      checkProfile();
+    }
+  }, [isConnected, contract, account, navigate]);
+
   const handleCardClick = async (type) => {
     if (!isConnected) {
       await connectWallet();
-      return;
-    }
-
-    // Check if user is already registered
-    try {
-      const profile = await contract.getProfile(account);
-      
-      if (profile.exists) {
-        if (profile.isInstitute) {
-          navigate('/institute');
-        } else {
-          navigate('/student');
+    } else {
+      try {
+        const profile = await contract.getProfile(account);
+        if (!profile.exists) {
+          setRegisterType(type);
+          setShowRegisterModal(true);
         }
-      } else {
-        // User not registered, show registration modal
-        setRegisterType(type);
-        setShowRegisterModal(true);
+      } catch (error) {
+        console.error('Error checking profile on click:', error);
+        alert('Error checking profile. Please try again.');
       }
-    } catch (error) {
-      console.error('Error checking profile:', error);
-      alert('Error checking profile. Please try again.');
     }
   };
 
@@ -52,16 +64,12 @@ const Login = () => {
     try {
       const isInstitute = registerType === 'institute';
       
-      // Call createProfile with explicit gas limit
       const tx = await contract.createProfile(registerName.trim(), '', isInstitute, {
         gasLimit: 500000
       });
       
-      // Wait for transaction confirmation
-      const receipt = await tx.wait();
-      console.log('Registration successful:', receipt);
+      await tx.wait();
       
-      // Navigate to appropriate dashboard
       if (isInstitute) {
         navigate('/institute');
       } else {
@@ -69,13 +77,6 @@ const Login = () => {
       }
     } catch (error) {
       console.error('Registration error:', error);
-      console.error('Error data:', error.data);
-      console.error('Error reason:', error.reason);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
-      console.error('Full error object:', JSON.stringify(error, null, 2));
-      
-      // Extract detailed error message
       let errorMessage = 'Registration failed: ';
       if (error.reason) {
         errorMessage += error.reason;
@@ -86,7 +87,6 @@ const Login = () => {
       } else {
         errorMessage += 'Unknown error occurred';
       }
-      
       alert(errorMessage);
     } finally {
       setIsRegistering(false);
@@ -95,7 +95,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-blue-700 flex items-center justify-center p-4">
-      {/* Background pattern */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute inset-0" style={{
           backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
@@ -104,9 +103,7 @@ const Login = () => {
       </div>
 
       <div className="relative z-10 flex gap-8 flex-wrap justify-center max-w-4xl w-full">
-        {/* Student Card */}
         <div 
-          onClick={() => handleCardClick('student')}
           className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 w-full max-w-sm cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl shadow-xl"
         >
           <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Student</h2>
@@ -119,23 +116,22 @@ const Login = () => {
           </div>
           <div className="flex gap-4 justify-center">
             <button 
+              onClick={() => handleCardClick('student')}
               className="px-6 py-3 bg-pink-500 text-white rounded-lg border-2 border-pink-600 hover:bg-pink-600 transition-colors font-semibold"
               disabled={isLoading}
             >
               {isLoading ? 'Connecting...' : 'LOGIN'}
             </button>
             <button 
+              onClick={() => handleCardClick('student')}
               className="px-6 py-3 bg-pink-500 text-white rounded-lg border-2 border-pink-600 hover:bg-pink-600 transition-colors font-semibold"
-              disabled={isLoading}
             >
               SIGN UP
             </button>
           </div>
         </div>
 
-        {/* Institute Card */}
         <div 
-          onClick={() => handleCardClick('institute')}
           className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 w-full max-w-sm cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl shadow-xl"
         >
           <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Institute</h2>
@@ -148,14 +144,15 @@ const Login = () => {
           </div>
           <div className="flex gap-4 justify-center">
             <button 
+              onClick={() => handleCardClick('institute')}
               className="px-6 py-3 bg-pink-500 text-white rounded-lg border-2 border-pink-600 hover:bg-pink-600 transition-colors font-semibold"
               disabled={isLoading}
             >
               {isLoading ? 'Connecting...' : 'LOGIN'}
             </button>
             <button 
+              onClick={() => handleCardClick('institute')}
               className="px-6 py-3 bg-pink-500 text-white rounded-lg border-2 border-pink-600 hover:bg-pink-600 transition-colors font-semibold"
-              disabled={isLoading}
             >
               SIGN UP
             </button>
@@ -163,7 +160,6 @@ const Login = () => {
         </div>
       </div>
 
-      {/* Registration Modal */}
       {showRegisterModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
@@ -201,4 +197,3 @@ const Login = () => {
 };
 
 export default Login;
-

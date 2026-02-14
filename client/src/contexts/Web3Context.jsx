@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import contractABI from '../utils/contractAbi.json';
 
 // Contract address on localhost
-const CONTRACT_ADDRESS = '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9';
+const CONTRACT_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
 
 const Web3Context = createContext(null);
 
@@ -72,8 +72,8 @@ export const Web3Provider = ({ children }) => {
               method: 'wallet_addEthereumChain',
               params: [{
                 chainId: '0x539',
-                chainName: 'Localhost 8547',
-                rpcUrls: ['http://127.0.0.1:8547'],
+                chainName: 'Localhost 8545',
+                rpcUrls: ['http://127.0.0.1:8545'],
                 nativeCurrency: {
                   name: 'ETH',
                   symbol: 'ETH',

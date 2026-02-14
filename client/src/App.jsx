@@ -1,25 +1,32 @@
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Web3Provider } from './contexts/Web3Context';
+import { Web3Provider, useWeb3 } from './contexts/Web3Context';
 import Login from './components/Login';
 import StudentDashboard from './components/StudentDashboard';
 import InstituteDashboard from './components/InstituteDashboard';
 
+const AppContent = () => {
+  const { isLoading } = useWeb3();
+
+  if (isLoading) {
+    return <div>Loading...</div>; 
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/student" element={<StudentDashboard />} />
+      <Route path="/institute" element={<InstituteDashboard />} />
+    </Routes>
+  );
+};
+
 function App() {
   return (
-    <div>
-      <h1>Rendering before Web3Provider</h1>
+    <Router>
       <Web3Provider>
-        <h1>Rendering inside Web3Provider</h1>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/student" element={<StudentDashboard />} />
-            <Route path="/institute" element={<InstituteDashboard />} />
-          </Routes>
-        </Router>
+        <AppContent />
       </Web3Provider>
-    </div>
+    </Router>
   );
 }
 

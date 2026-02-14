@@ -4,10 +4,11 @@
   "description": "Blockchain-based certificate validation and storage DApp",
   "main": "index.js",
   "scripts": {
+   "start": "concurrently \"npm run node\" \"npm run dev --prefix client\"",
     "compile": "hardhat compile",
     "test": "hardhat test",
     "deploy": "hardhat run scripts/deploy.js --network localhost",
-    "node": "hardhat node"
+    "node": "hardhat node --hostname 0.0.0.0"
   },
   "keywords": [
     "blockchain",
@@ -21,6 +22,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "concurrently": "^9.2.1",
     "hardhat": "^2.19.0"
   },
   "dependencies": {
